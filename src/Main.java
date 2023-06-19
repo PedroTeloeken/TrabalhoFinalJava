@@ -13,7 +13,6 @@ public class Main {
 
         char[][] vetBoard = new char[lines][column];
 
-
         do {
             newGame(vetBoard);
             corPlayer = escolherCorPlayer(teclado, corPlayer);
@@ -29,7 +28,6 @@ public class Main {
                 atribuiJogadaRobo(vetBoard, corRobo);
             }
 
-
             //Por algum motivo o sistema tá se batendo com essas duas linhas de código, mas a ideia era essa
             //System.out.println("Deseja iniciar uma nova partida?");
             //jogarNovamente = teclado.nextBoolean();
@@ -44,6 +42,7 @@ public class Main {
         int min = 0; // Valor mínimo do intervalo
         int max = 6; // Valor máximo do intervalo
         boolean casaValida = true;
+        boolean casaValida2 = true;
 
         // Gerar um número aleatório dentro do intervalo
         int jogada = (int) (min + (Math.random() * (max - min + 1)));
@@ -52,7 +51,13 @@ public class Main {
         while (casaValida) {
 
             if (linha < 0) {
-                System.out.println("Não tem mais linhas");
+                while (casaValida2) {
+                    jogada = (int) (min + (Math.random() * (max - min + 1)));
+                    if (vetBoard[1][jogada] == 'B') {
+                        vetBoard[linha][jogada] = corRobo;
+                        casaValida2 = false;
+                    }
+                }
             } else {
                 if (vetBoard[linha][jogada] == 'B') {
                     vetBoard[linha][jogada] = corRobo;
@@ -70,26 +75,38 @@ public class Main {
 
     private void atribuiJogadaPlayer(Scanner teclado, char[][] vetBoard, char corPlayer) {
 
-        System.out.println("Informe a coluna que você vai querer jogar:");
+        int qtdJogadas = 0;
 
-        boolean casaValida = true;
-        int jogada = teclado.nextInt() - 1;
+        int jogada = 0;
+        do {
+            System.out.println("Informe a coluna que você vai querer jogar de 1 até 7:");
 
-        int linha = 5;
-        while (casaValida) {
+            boolean casaValida = true;
+            jogada = teclado.nextInt() - 1;
 
-            if (linha < 0) {
-                System.out.println("Não tem mais linhas");
+            if (jogada >= 0 && jogada <= 6) {
+
+                int linha = 5;
+
+                while (casaValida) {
+
+                    if (linha < 0) {
+                        System.out.println("Não tem mais linhas");
+
+                    } else {
+                        if (vetBoard[linha][jogada] == 'B') {
+                            vetBoard[linha][jogada] = corPlayer;
+                            printTabuleiro(vetBoard);
+                            casaValida = false;
+                        }
+                        linha--;
+                    }
+                }
 
             } else {
-                if (vetBoard[linha][jogada] == 'B') {
-                    vetBoard[linha][jogada] = corPlayer;
-                    printTabuleiro(vetBoard);
-                    casaValida = false;
-                }
-                linha--;
+                System.out.println("\u001b[1;31m" + "!!! Informe um número válido !!!" + "\u001b[0m");
             }
-        }
+        } while (jogada < 0 || jogada > 6);
     }
 
     //metodo para escolher a cor do player
@@ -122,8 +139,6 @@ public class Main {
 
         return corRobo;
     }
-
-
     //método para atribuir jogada do player
 
     //método para iniciar/ zerar um jogo
@@ -146,7 +161,13 @@ public class Main {
         for (int l = 0; l < vetBoard.length; l++) {
             System.out.print(" " + (l + 1) + " ");
             for (int c = 0; c < 7; c++) {
-                System.out.print("| " + vetBoard[l][c] + " |");
+                if (vetBoard[l][c] == 'V') {
+                    System.out.print("| " + "\u001b[1;31m" + vetBoard[l][c] + "\u001b[0m" + " |");
+                } else if (vetBoard[l][c] == 'A') {
+                    System.out.print("| " + "\u001b[1;34m" + vetBoard[l][c] + "\u001b[0m" + " |");
+                } else {
+                    System.out.print("| " + vetBoard[l][c] + " |");
+                }
             }
             System.out.println();
         }
