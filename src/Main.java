@@ -3,146 +3,165 @@ import java.util.Scanner;
 public class Main {
 
     private Main() {
+        jogarJogo();
+    }
+
+    private void jogarJogo() {
         Scanner teclado = new Scanner(System.in);
 
         final int lines = 6;
         final int column = 7;
-        char corPlayer = 'a';
+        char corPlayer;
         char corRobo;
-        boolean playAgain = false;
+        boolean playAgain;
+        boolean fimDoJogo = false;
 
         char[][] vetBoard = new char[lines][column];
 
         do {
-            newGame(vetBoard);
-            corPlayer = escolherCorPlayer(teclado, corPlayer);
+            novoJogo(vetBoard);
+            corPlayer = escolherCorPlayer(teclado);
 
-            if (corPlayer == 'V') {
-                corRobo = 'A';
-            } else {
-                corRobo = 'V';
-            }
+            corRobo = getCorRobo(corPlayer);
 
-            while (true) {
-                atribuiJogadaPlayer(teclado, vetBoard, corPlayer);
-                atribuiJogadaRobo(vetBoard, corRobo);
-            }
+            fimDoJogo = endGame(teclado, corPlayer, corRobo, fimDoJogo, vetBoard);
+            char resposta;
 
-            //Por algum motivo o sistema tá se batendo com essas duas linhas de código, mas a ideia era essa
-            //System.out.println("Deseja iniciar uma nova partida?");
-            //jogarNovamente = teclado.nextBoolean();
+            do {
+                System.out.println("Deseja iniciar uma nova partida? (S/N)");
+                resposta = teclado.next().toUpperCase().charAt(0);
+                playAgain = (resposta == 'S');
+                if (resposta == 'S' || resposta == 'N') {
+                    if (playAgain) {
+                        fimDoJogo = false;
+                    } else {
+                        System.out.println("Fim de Jogo");
+                    }
+                } else {
+                    System.out.println("Resposta Invalida");
+                }
+            } while (resposta != 'S' && resposta != 'N');
 
-        } while (true);
-
+        } while (playAgain);
     }
 
-    //metodo para randomizar a jogada do robo
-    private void atribuiJogadaRobo(char[][] vetBoard, char corRobo) {
+    private static char getCorRobo(char corPlayer) {
+        char corRobo;
+        if (corPlayer == 'V') {
+            corRobo = 'A';
+        } else {
+            corRobo = 'V';
+        }
+        return corRobo;
+    }
 
-        int min = 0; // Valor mínimo do intervalo
-        int max = 6; // Valor máximo do intervalo
-        boolean casaValida = true;
-        boolean casaValida2 = true;
-
-        // Gerar um número aleatório dentro do intervalo
-        int jogada = (int) (min + (Math.random() * (max - min + 1)));
-
-        int linha = 5;
-        while (casaValida) {
-
-            if (linha < 0) {
-                while (casaValida2) {
-                    jogada = (int) (min + (Math.random() * (max - min + 1)));
-                    if (vetBoard[1][jogada] == 'B') {
-                        vetBoard[linha][jogada] = corRobo;
-                        casaValida2 = false;
-                    }
-                }
-            } else {
-                if (vetBoard[linha][jogada] == 'B') {
-                    vetBoard[linha][jogada] = corRobo;
-                    casaValida = false;
-                }
-                linha--;
+    private boolean endGame(Scanner teclado, char corPlayer, char corRobo, boolean fimDoJogo, char[][] vetBoard) {
+        int cont = 0;
+        while (!fimDoJogo) {
+            fimDoJogo = atribuiJogadaPlayer(teclado, vetBoard, corPlayer);
+            if (!fimDoJogo) {
+                fimDoJogo = atribuiJogadaRobo(vetBoard, corRobo);
+            }
+            cont = cont + 2;
+            if (cont == 42) {
+                System.out.println("Empate");
+                return true;
             }
         }
+        return false;
+    }
+
+    // Método para randomizar a jogada do robô
+    private boolean atribuiJogadaRobo(char[][] vetBoard, char corRobo) {
+        boolean jogarNovamente;
+        do {
+            jogarNovamente = false;
+            int min = 0; // Valor mínimo do intervalo
+            int max = 6; // Valor máximo do intervalo
+            boolean casaValida = true;
+
+            // Gerar um número aleatório dentro do intervalo
+            int jogada = (int) (min + (Math.random() * (max - min + 1)));
+
+            int linha = 5;
+            while (casaValida) {
+                if (linha < 0) {
+                    jogarNovamente = true;
+                    break;
+                } else {
+                    if (vetBoard[linha][jogada] == 'B') {
+                        vetBoard[linha][jogada] = corRobo;
+                        casaValida = false;
+                        if (verificaVitoria(vetBoard, linha, jogada, corRobo)) {
+                            System.out.println("Jogada do robô: ");
+                            printTabuleiro(vetBoard);
+                            System.out.println("\u001b[1;34m" + "!!! Robô VENCEU !!!" + "\u001b[0m" + " ");
+                            return true;
+                        }
+                    }
+                    linha--;
+                }
+            }
+        } while (jogarNovamente);
 
         System.out.println("Jogada do robô: ");
-        System.out.println();
         printTabuleiro(vetBoard);
-
+        return false;
     }
 
-    private void atribuiJogadaPlayer(Scanner teclado, char[][] vetBoard, char corPlayer) {
-
-        int qtdJogadas = 0;
-
-        int jogada = 0;
-        do {
-            System.out.println("Informe a coluna que você vai querer jogar de 1 até 7:");
-
-            boolean casaValida = true;
-            jogada = teclado.nextInt() - 1;
-
-            if (jogada >= 0 && jogada <= 6) {
-
-                int linha = 5;
-
-                while (casaValida) {
-
-                    if (linha < 0) {
-                        System.out.println("Não tem mais linhas");
-
-                    } else {
-                        if (vetBoard[linha][jogada] == 'B') {
-                            vetBoard[linha][jogada] = corPlayer;
-                            printTabuleiro(vetBoard);
-                            casaValida = false;
-                        }
-                        linha--;
-                    }
-                }
-
-            } else {
-                System.out.println("\u001b[1;31m" + "!!! Informe um número válido !!!" + "\u001b[0m");
-            }
-        } while (jogada < 0 || jogada > 6);
-    }
-
-    //metodo para escolher a cor do player
-    private char escolherCorPlayer(Scanner teclado, char cor) {
-
+    // Método para escolher a cor do player
+    private char escolherCorPlayer(Scanner teclado) {
+        char cor;
         do {
             System.out.println("Informe com qual cor você deseja jogar, V (Vermelho) ou A (Azul)");
             cor = teclado.next().toUpperCase().charAt(0);
-
         } while ((cor != 'V' && cor != 'A'));
-
         return cor;
     }
 
-    //metodo para escolher a cor do robo que será a contraria do player,
-    //não tem validação porque aqui só serão aceitos valores passados corretos da validação do player
+    private boolean atribuiJogadaPlayer(Scanner teclado, char[][] vetBoard, char corPlayer) {
+        boolean jogarNovamente;
+        do {
+            jogarNovamente = false;
+            System.out.println("Informe a coluna que você vai querer jogar:");
+            boolean casaValida = true;
+            int jogada = teclado.nextInt() - 1;
+            boolean validaCasa = true;
 
-    private char escolherCorRobo(char corPlayer) {
+            while (validaCasa) {
+                if (jogada >= 0 && jogada <= 6) {
+                    validaCasa = false;
+                } else {
+                    System.out.println("\u001b[1;31m" + "!!! Informe um número válido !!!" + "\u001b[0m");
+                    jogada = teclado.nextInt() - 1;
+                }
+            }
 
-        char corRobo = 'a';
-
-        switch (corPlayer) {
-            case 'V':
-                corRobo = 'A';
-                break;
-            case 'A':
-                corRobo = 'V';
-                break;
-        }
-
-        return corRobo;
+            int linha = 5;
+            while (casaValida) {
+                if (linha < 0) {
+                    System.out.println("Não tem mais linhas");
+                    jogarNovamente = true;
+                    break;
+                } else {
+                    if (vetBoard[linha][jogada] == 'B') {
+                        vetBoard[linha][jogada] = corPlayer;
+                        printTabuleiro(vetBoard);
+                        casaValida = false;
+                        if (verificaVitoria(vetBoard, linha, jogada, corPlayer)) {
+                            System.out.println("\u001b[1;36m" + "!!! VOCÊ VENCEU !!!" + "\u001b[0m" + " ");
+                            return true;
+                        }
+                    }
+                    linha--;
+                }
+            }
+        } while (jogarNovamente);
+        return false;
     }
-    //método para atribuir jogada do player
 
-    //método para iniciar/ zerar um jogo
-    private void newGame(char[][] vetBoard) {
+    // Método para iniciar/zerar um jogo
+    private void novoJogo(char[][] vetBoard) {
         System.out.println("   | 1 || 2 || 3 || 4 || 5 || 6 || 7 |");
         for (int l = 0; l < vetBoard.length; l++) {
             System.out.print(" " + (l + 1) + " ");
@@ -154,7 +173,7 @@ public class Main {
         }
     }
 
-    //metodo para mostrar o tabuleiro
+    // Método para mostrar o tabuleiro
     private void printTabuleiro(char[][] vetBoard) {
         System.out.println();
         System.out.println("   | 1 || 2 || 3 || 4 || 5 || 6 || 7 |");
@@ -171,6 +190,74 @@ public class Main {
             }
             System.out.println();
         }
+    }
+
+    // Método para verificar a condição de vitória
+    private boolean verificaVitoria(char[][] vetBoard, int linha, int coluna, char cor) {
+        // Verificar horizontalmente
+        int count = 0;
+        for (int c = 0; c < 7; c++) {
+            if (vetBoard[linha][c] == cor) {
+                count++;
+                if (count == 4) {
+                    return true;
+                }
+            } else {
+                count = 0;
+            }
+        }
+
+        // Verificar verticalmente
+        count = 0;
+        for (int l = 0; l < 6; l++) {
+            if (vetBoard[l][coluna] == cor) {
+                count++;
+                if (count == 4) {
+                    return true;
+                }
+            } else {
+                count = 0;
+            }
+        }
+
+        // Verificar diagonalmente para a direita (/)
+        int startRow = linha - Math.min(linha, coluna);
+        int startCol = coluna - Math.min(linha, coluna);
+        count = 0;
+        int r = startRow;
+        int c = startCol;
+        while (r < 6 && c < 7) {
+            if (vetBoard[r][c] == cor) {
+                count++;
+                if (count == 4) {
+                    return true;
+                }
+            } else {
+                count = 0;
+            }
+            r++;
+            c++;
+        }
+
+        // Verificar diagonalmente para a esquerda (\)
+        startRow = linha - Math.min(linha, 6 - coluna);
+        startCol = coluna + Math.min(linha, 6 - coluna);
+        count = 0;
+        r = startRow;
+        c = startCol;
+        while (r < 6 && c >= 0) {
+            if (vetBoard[r][c] == cor) {
+                count++;
+                if (count == 4) {
+                    return true;
+                }
+            } else {
+                count = 0;
+            }
+            r++;
+            c--;
+        }
+        return false;
     }
 
     public static void main(String[] args) {
